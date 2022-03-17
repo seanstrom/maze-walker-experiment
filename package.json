@@ -1,0 +1,22 @@
+{
+  "name": "transcrypt-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel src/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.3.2",
+    "parcel-transformer-transcrypt": "^0.1.4"
+  },
+  "dependencies": {
+    "@hyperapp/html": "^2.0.0",
+    "global": "^4.4.0",
+    "graphology": "^0.24.1",
+    "hyperapp": "^2.0.21"
+  }
+}
