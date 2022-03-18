@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "start": "parcel src/index.html"
   },
@@ -11,12 +14,14 @@
   "license": "ISC",
   "devDependencies": {
     "parcel": "^2.3.2",
+    "parcel-resolver-prando": "file:packages/parcel-resolver-prando",
     "parcel-transformer-transcrypt": "^0.1.4"
   },
   "dependencies": {
     "@hyperapp/html": "^2.0.0",
     "global": "^4.4.0",
     "graphology": "^0.24.1",
-    "hyperapp": "^2.0.21"
+    "hyperapp": "^2.0.21",
+    "maze-generation": "^3.0.1"
   }
 }
