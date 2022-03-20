@@ -5,6 +5,7 @@
 body {
   margin: 0;
   padding: 0;
+  background: #eeeeee;
 }
 
 .container {
@@ -88,7 +89,7 @@ body {
     }
 
     &.visited.path {
-      background: blueviolet;
+      background: #a984cc;
     }
   }
 
