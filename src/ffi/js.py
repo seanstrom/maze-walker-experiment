@@ -34,3 +34,28 @@ Html = require('@hyperapp/html')
 window = require('global/window')
 console = require('global/console')
 document = require('global/document')
+
+
+# JSON
+
+Json = window.JSON
+
+
+# Maze Generator
+
+Maze = require('maze-generation')
+
+
+# Polyfill asdict for dataclasses
+
+def asdict(data):
+    props = dict()
+    propNames = window.Object['keys'](data)
+
+    for propName in propNames:
+        if "__" in propName:
+            continue
+        else:
+            props[propName] = data[propName]
+
+    return props
