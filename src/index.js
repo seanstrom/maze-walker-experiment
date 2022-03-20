@@ -1,5 +1,7 @@
 import { main } from './main.py'
+import maze_layout from './mazes/dfs-0.json'
+import './index.scss'
 
-// TODO: include theme
 
+window.mazes = maze_layout
 main()

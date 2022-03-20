@@ -2,6 +2,7 @@
   "extends": ["@parcel/config-default"],
   "resolvers": ["parcel-resolver-prando", "..."],
   "transformers": {
-    "*.py": ["parcel-transformer-transcrypt"]
+    "*.py": ["parcel-transformer-transcrypt"],
+    "*.{scss,sass}": ["@parcel/transformer-sass"]
   }
 }

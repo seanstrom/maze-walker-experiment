@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@parcel/transformer-sass": "^2.3.2",
     "parcel": "^2.3.2",
     "parcel-resolver-prando": "file:packages/parcel-resolver-prando",
     "parcel-transformer-transcrypt": "^0.1.4"
