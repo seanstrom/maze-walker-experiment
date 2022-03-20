@@ -81,6 +81,7 @@ class State:
     graph: Any = None
     status: str = None
     search: Any = None
+    strategy: str = None,
     playing: bool = False
     path: dict[str, bool] = None
     layout: List[List[Any]] = None
@@ -111,6 +112,20 @@ class Pause:
     """
     Wip
     """
+    pass
+
+
+@dataclass
+class Reset:
+    pass
+
+
+@dataclass
+class UseBFS:
+    pass
+
+@dataclass
+class UseDFS:
     pass
 
 
@@ -258,6 +273,7 @@ def init(maze_layout):
     def to_state():
         return State(
             playing=False,
+            strategy="dfs",
             status="searching",
             path=dict(),
             visited=dict(),
@@ -369,6 +385,25 @@ def pause(prev_state):
     return [prev_state, lambda dispatch: dispatch(pause_action)]
 
 
+def reset(state):
+    next_state = init(state.layout)()
+    return next_state
+
+
+def use_bfs_search(state: State) -> State:
+    next_state = init(state.layout)()
+    next_state.strategy = "bfs"
+    next_state.search = SearchQueue()
+    return next_state
+
+
+def use_dfs_search(state: State) -> State:
+    next_state = init(state.layout)()
+    next_state.strategy = "dfs"
+    next_state.search = SearchStack()
+    return next_state
+
+
 def update(state, msg):
     """
     Responsible for:
@@ -380,6 +415,12 @@ def update(state, msg):
         return play(state)
     if type(msg) is Pause:
         return pause(state)
+    if type(msg) is Reset:
+        return reset(state)
+    if type(msg) is UseBFS:
+        return use_bfs_search(state)
+    if type(msg) is UseDFS:
+        return use_dfs_search(state)
 
     return state
 
@@ -450,7 +491,40 @@ def view(state: State):
                     "onclick": action(NextStep())
                 }, [
                     Html.text("Next")
-                ])
+                ]),
+                Html.button({
+                    "onclick": action(Reset())
+                }, [
+                    Html.text("Reset")
+                ]),
+
+                Html.div({}, [
+                    Html.input({
+                        "id": "bfs",
+                        "type": "radio",
+                        "name": "strategy",
+                        "checked": state.strategy == "bfs",
+                        "onchange": action(UseBFS())
+                    }, []),
+
+                    Html.label({"for": "bfs"}, [
+                        Html.text("BFS")
+                    ])
+                ]),
+
+                Html.div({}, [
+                    Html.input({
+                        "id": "dfs",
+                        "type": "radio",
+                        "name": "strategy",
+                        "checked": state.strategy == 'dfs',
+                        "onchange": action(UseDFS())
+                    }, []),
+
+                    Html.label({"for": "dfs"}, [
+                        Html.text("DFS")
+                    ])
+                ]),
             ])
         ])
     ])
