@@ -4,5 +4,5 @@ import bfsLayout from './mazes/bfs-0.json'
 import './index.scss'
 
 
-window.mazes = { bfs: bfsLayout, dfs: dfsLayout }
+window.mazes = { "bfs-maze": bfsLayout, "dfs-maze": dfsLayout }
 main()

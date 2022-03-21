@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from ffi.js import Graph, Html, Hyper, document, window, asdict
 
 
@@ -12,15 +12,21 @@ class SearchNode:
     The SearchNode class is responsible for storing:
         * an ID to a graph node
         * the kind of graph node ("open", "wall", "start", "finish")
-        * the action to reach this search node ("up", "down", "left", "right")
+        * the position of the graph node in the maze layout
+        * the direction to reach this search node ("up", "down", "left", "right")
         * the parent or previous search node that led to this search node
 
-    A SearchNode is used along with a SearchStack or SearchQueue
+    A SearchNode is used along with search strategy like:
+        * SearchStack
+        * SearchQueue,
+        * SearchGreedy
+        * SearchStar
     """
     id: str = None
     kind: str = None
-    action: str = None
+    direction: str = None
     parent: object = None
+    position: Tuple[Any, Any] = None
 
 
 class SearchQueue():
@@ -32,20 +38,17 @@ class SearchQueue():
     """
     def __init__(self):
         self.search = []
-
-    def add(self, node):
-        self.search.append(node)
+        self.count = -1
 
     def empty(self):
         return len(self.search) == 0
 
+    def add(self, node):
+        self.search.append(node)
+
     def remove(self):
-        if self.empty():
-            return None
-        else:
-            node = self.search[0]
-            self.search = self.search[1:]
-            return node
+        if not self.empty():
+            return self.search.pop(0)
 
 
 class SearchStack(SearchQueue):
@@ -56,13 +59,63 @@ class SearchStack(SearchQueue):
     A SearchQueue is used during a DFS strategy
     """
     def remove(self):
-        if self.empty():
-            return None
+        if not self.empty():
+            return self.search.pop()
+
+
+class SearchGreedy(SearchQueue):
+    def __init__(self, target_pos):
+        super().__init__()
+        self.target_pos = target_pos
+
+    def distance(self, node):
+        (node_x, node_y) = node.position
+        (target_x, target_y) = self.target_pos
+        x_distance = abs(target_x - node_x)
+        y_distance = abs(target_y - node_y)
+        return x_distance + y_distance
+
+    def compare(self, node_a, node_b):
+        node_a_distance = self.distance(node_a)
+        node_b_distance = self.distance(node_b)
+        if node_a_distance < node_b_distance:
+            return -1
+        elif node_a_distance > node_b_distance:
+            return 1
         else:
-            last_index = len(self.search) - 1
-            node = self.search[last_index]
-            self.search = self.search[:-1]
-            return node
+            return 0
+
+    def add(self, node):
+        self.search.append(node)
+        self.search.js_sort(self.compare)
+
+
+class SearchStar(SearchGreedy):
+    def cost(self, node):
+        count = 0
+        while node.parent is not None:
+            count += 1
+            node = node.parent
+        return count
+
+    def compare(self, node_a, node_b):
+        node_a_cost = self.cost(node_a)
+        node_b_cost = self.cost(node_b)
+        node_a_distance = self.distance(node_a)
+        node_b_distance = self.distance(node_b)
+        node_a_value = node_a_distance + node_a_cost
+        node_b_value = node_b_distance + node_b_cost
+
+        if node_a_value < node_b_value:
+            return -1
+        elif node_a_value > node_b_value:
+            return 1
+        elif node_a_distance < node_b_distance:
+            return -1
+        elif node_a_distance > node_b_distance:
+            return 1
+        else:
+            return 0
 
 
 @dataclass
@@ -134,10 +187,12 @@ class ChangeStrategy:
 # Helpers
 
 
-bfs_maze_id = "bfs"
-dfs_maze_id = "dfs"
-bfs_strategy_id = "bfs"
-dfs_strategy_id = "dfs"
+bfs_maze_id = "bfs-maze"
+dfs_maze_id = "dfs-maze"
+bfs_strategy_id = "bfs-strategy"
+dfs_strategy_id = "dfs-strategy"
+greedy_strategy_id = "greedy-strategy"
+astar_strategy_id = "astar-strategy"
 
 
 opposite_directions = dict(
@@ -243,7 +298,7 @@ def build_graph_helper(graph, layout, node_pos):
     node_id = make_id(*node_pos)
     neighbors = detect_neighbors(layout, node_pos)
 
-    add_node(graph, node_id, None)
+    add_node(graph, node_id, dict(position=node_pos))
 
     for (direction, neighbor_pos) in neighbors:
         neighbor_id = make_id(*neighbor_pos)
@@ -272,7 +327,7 @@ def init(maze_id, strategy_id):
     """
     maze_layout = window.mazes[maze_id]["rows"]
     markers = find_markers(maze_layout)
-    (start_pos, _) = markers
+    (start_pos, finish_pos) = markers
 
     start_id = make_id(*start_pos)
     maze_graph = build_graph(maze_layout, start_pos)
@@ -283,6 +338,10 @@ def init(maze_id, strategy_id):
             return SearchQueue()
         elif strategy == dfs_strategy_id:
             return SearchStack()
+        elif strategy == greedy_strategy_id:
+            return SearchGreedy(finish_pos)
+        elif strategy == astar_strategy_id:
+            return SearchStar(finish_pos)
 
     search_strategy = match_strategy(strategy_id)
 
@@ -328,6 +387,7 @@ def next_step(state: State) -> State:
 
     for neighbor_id in neighbors:
         edge = state.graph.edge(state.current_node.id, neighbor_id)
+        position = state.graph.getNodeAttribute(neighbor_id, 'position')
         direction = state.graph.getEdgeAttribute(edge, 'direction')
 
         if not state.visited[neighbor_id]:
@@ -335,7 +395,8 @@ def next_step(state: State) -> State:
                 SearchNode(
                     id=neighbor_id,
                     parent=state.current_node,
-                    action=direction))
+                    position=position,
+                    direction=direction))
 
     if not state.visited[state.current_node.id]:
         state.visited[state.current_node.id] = True
@@ -538,6 +599,34 @@ def view(state: State):
 
                 Html.div({}, [
                     Html.input({
+                        "id": greedy_strategy_id,
+                        "type": "radio",
+                        "name": "strategy",
+                        "checked": state.strategy == greedy_strategy_id,
+                        "onchange": action(ChangeStrategy(greedy_strategy_id))
+                    }, []),
+
+                    Html.label({"for": greedy_strategy_id}, [
+                        Html.text("GBFS")
+                    ])
+                ]),
+
+                Html.div({}, [
+                    Html.input({
+                        "id": astar_strategy_id,
+                        "type": "radio",
+                        "name": "strategy",
+                        "checked": state.strategy == astar_strategy_id,
+                        "onchange": action(ChangeStrategy(astar_strategy_id))
+                    }, []),
+
+                    Html.label({"for": astar_strategy_id}, [
+                        Html.text("A-Star")
+                    ])
+                ]),
+
+                Html.div({}, [
+                    Html.input({
                         "id": "bfs-maze",
                         "type": "radio",
                         "name": "maze",
@@ -576,5 +665,5 @@ def main():
     * Visualizes a maze of cells
     """
     element = document.getElementById("root")
-    Hyper.app(node=element, view=view, init=init(dfs_maze_id, dfs_strategy_id))
+    Hyper.app(node=element, view=view, init=init(dfs_maze_id, bfs_strategy_id))
 
