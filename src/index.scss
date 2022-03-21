@@ -57,6 +57,10 @@ body {
 
   button {
     padding: 10px 20px;
+    align-self: flex-start;
+  }
+
+  .input-group, button {
     margin-right: 10px;
   }
 }
