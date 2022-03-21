@@ -298,7 +298,7 @@ def find_markers(maze_layout):
     return (start_marker, finish_marker)
 
 
-def is_open_space(cell):
+def is_valid_space(cell):
     """
     Checks if a maze cell is a valid space (not a wall).
     """
@@ -330,7 +330,7 @@ def detect_neighbors(rows, node_pos):
         _x, _y = pos
         if 0 <= _x < cells_total and 0 <= _y < rows_total:
             cell = rows[_y][_x]
-            if is_open_space(cell):
+            if is_valid_space(cell):
                 neighbors.append((direction, pos))
 
     return neighbors
