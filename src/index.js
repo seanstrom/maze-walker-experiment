@@ -1,7 +1,8 @@
 import { main } from './main.py'
-import maze_layout from './mazes/dfs-0.json'
+import dfsLayout from './mazes/dfs-0.json'
+import bfsLayout from './mazes/bfs-0.json'
 import './index.scss'
 
 
-window.mazes = maze_layout
+window.mazes = { bfs: bfsLayout, dfs: dfsLayout }
 main()

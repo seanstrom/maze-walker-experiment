@@ -81,6 +81,7 @@ class State:
     graph: Any = None
     status: str = None
     search: Any = None
+    maze_id: str = None,
     strategy: str = None,
     playing: bool = False
     path: dict[str, bool] = None
@@ -129,7 +130,18 @@ class UseDFS:
     pass
 
 
+@dataclass
+class ChangeMaze:
+    maze_id: str = None
+
+
 # Helpers
+
+
+bfs_maze_id = "bfs"
+dfs_maze_id = "dfs"
+bfs_strategy_id = "bfs"
+dfs_strategy_id = "dfs"
 
 
 opposite_directions = dict(
@@ -209,10 +221,10 @@ def detect_neighbors(rows, node_pos):
     rows_total = len(rows)
 
     candidates = [
-        ((x, y - 1), "up"),
-        ((x + 1, y), "right"),
         ((x, y + 1), "down"),
+        ((x + 1, y), "right"),
         ((x - 1, y), "left"),
+        ((x, y - 1), "up"),
     ]
 
     for (pos, direction) in candidates:
@@ -258,23 +270,32 @@ def build_graph(maze_layout, start_pos):
     return graph
 
 
-def init(maze_layout):
+def init(maze_id, strategy_id):
     """
     Initializes the state of the program based on a maze layout
     """
+    maze_layout = window.mazes[maze_id]["rows"]
     markers = find_markers(maze_layout)
     (start_pos, _) = markers
-    start_id = make_id(*start_pos)
 
+    start_id = make_id(*start_pos)
     maze_graph = build_graph(maze_layout, start_pos)
     search_node = SearchNode(id=start_id)
-    search_strategy = SearchStack()
+
+    def match_strategy(strategy):
+        if strategy == bfs_strategy_id:
+            return SearchQueue()
+        elif strategy == dfs_strategy_id:
+            return SearchStack()
+
+    search_strategy = match_strategy(strategy_id)
 
     def to_state():
         return State(
             playing=False,
-            strategy="dfs",
             status="searching",
+            strategy=strategy_id,
+            maze_id=maze_id,
             path=dict(),
             visited=dict(),
             markers=markers,
@@ -386,22 +407,22 @@ def pause(prev_state):
 
 
 def reset(state):
-    next_state = init(state.layout)()
+    next_state = init(state.maze_id, state.strategy)()
     return next_state
 
 
 def use_bfs_search(state: State) -> State:
-    next_state = init(state.layout)()
-    next_state.strategy = "bfs"
-    next_state.search = SearchQueue()
+    next_state = init(state.maze_id, bfs_strategy_id)()
     return next_state
 
 
 def use_dfs_search(state: State) -> State:
-    next_state = init(state.layout)()
-    next_state.strategy = "dfs"
-    next_state.search = SearchStack()
+    next_state = init(state.maze_id, dfs_strategy_id)()
     return next_state
+
+
+def change_maze(state: State, msg: ChangeMaze) -> State:
+    return init(msg.maze_id, state.strategy)()
 
 
 def update(state, msg):
@@ -421,6 +442,8 @@ def update(state, msg):
         return use_bfs_search(state)
     if type(msg) is UseDFS:
         return use_dfs_search(state)
+    if type(msg) is ChangeMaze:
+        return change_maze(state, msg)
 
     return state
 
@@ -503,7 +526,7 @@ def view(state: State):
                         "id": "bfs",
                         "type": "radio",
                         "name": "strategy",
-                        "checked": state.strategy == "bfs",
+                        "checked": state.strategy == bfs_strategy_id,
                         "onchange": action(UseBFS())
                     }, []),
 
@@ -517,12 +540,40 @@ def view(state: State):
                         "id": "dfs",
                         "type": "radio",
                         "name": "strategy",
-                        "checked": state.strategy == 'dfs',
+                        "checked": state.strategy == dfs_strategy_id,
                         "onchange": action(UseDFS())
                     }, []),
 
                     Html.label({"for": "dfs"}, [
                         Html.text("DFS")
+                    ])
+                ]),
+
+                Html.div({}, [
+                    Html.input({
+                        "id": "bfs-maze",
+                        "type": "radio",
+                        "name": "maze",
+                        "checked": state.maze_id == bfs_maze_id,
+                        "onchange": action(ChangeMaze(bfs_maze_id))
+                    }, []),
+
+                    Html.label({"for": "bfs-maze"}, [
+                        Html.text("Small Maze")
+                    ])
+                ]),
+
+                Html.div({}, [
+                    Html.input({
+                        "id": "dfs-maze",
+                        "type": "radio",
+                        "name": "maze",
+                        "checked": state.maze_id == dfs_maze_id,
+                        "onchange": action(ChangeMaze(dfs_maze_id))
+                    }, []),
+
+                    Html.label({"for": "dfs-maze"}, [
+                        Html.text("Large Maze")
                     ])
                 ]),
             ])
@@ -537,7 +588,6 @@ def main():
     * Initializes the search of the maze
     * Visualizes a maze of cells
     """
-    maze_layout = window.mazes["rows"]
     element = document.getElementById("root")
-    Hyper.app(node=element, view=view, init=init(maze_layout))
+    Hyper.app(node=element, view=view, init=init(dfs_maze_id, dfs_strategy_id))
 
