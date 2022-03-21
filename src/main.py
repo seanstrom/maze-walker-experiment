@@ -34,7 +34,7 @@ class SearchQueue():
     The SearchQueue is responsible for:
         * storing and accessing SearchNodes in a FIFO structure
 
-    A SearchQueue is used during a BFS strategy
+    SearchQueue is used during a Breadth-First-Search (BFS) strategy
     """
     def __init__(self):
         self.search = []
@@ -56,7 +56,7 @@ class SearchStack(SearchQueue):
     The SearchStack is responsible for:
         * storing and accessing SearchNodes in a LIFO structure
 
-    A SearchQueue is used during a DFS strategy
+    SearchQueue is used during a Depth-First-Search (DFS) strategy
     """
     def remove(self):
         if not self.empty():
@@ -64,6 +64,13 @@ class SearchStack(SearchQueue):
 
 
 class SearchGreedy(SearchQueue):
+    """
+    The SearchGreedy is responsible for:
+        * storing, accessing, and sorting SearchNodes in a sorted structure based on:
+            * estimated distance from a SearchNode towards the goal (heuristic)
+
+    SearchGreedy is used during a Greed-Best-First-Search (GBFS) strategy
+    """
     def __init__(self, target_pos):
         super().__init__()
         self.target_pos = target_pos
@@ -87,10 +94,19 @@ class SearchGreedy(SearchQueue):
 
     def add(self, node):
         self.search.append(node)
+        # use the "javascript sort" function to sort the array
         self.search.js_sort(self.compare)
 
 
 class SearchStar(SearchGreedy):
+    """
+    The SearchStar is responsible for:
+        * storing, accessing, and sorting SearchNodes in a sorted structure based on:
+            * estimated distance from a SearchNode towards the goal (heuristic)
+            * and the steps taken from origin to the SearchNode (cost)
+
+    SearchStar is used during an A-Star Search (A*) strategy
+    """
     def cost(self, node):
         count = 0
         while node.parent is not None:
@@ -293,6 +309,7 @@ def build_graph_helper(graph, layout, node_pos):
     Responsible for
         * recursively walking a maze of cells by their neighbor cells
         * building a graph of nodes and edges between neighboring cells
+        * storing context about the position of the node in the maze
         * storing context about the direction of the edges between the cells
     """
     node_id = make_id(*node_pos)
@@ -509,6 +526,7 @@ def action(msg):
 def view_cell(state, row_index, cell_index, cell):
     """
     * visualizes a single cell of the maze
+    * visualizes the current cell of the maze with a "X" marker
     * creates an HTML view with CSS class names for coloring the cell
         * "cell" for marking it has a maze cell
         * "path" if it is a piece of the solution
@@ -571,28 +589,28 @@ def view(state: State):
 
                 Html.div({}, [
                     Html.input({
-                        "id": "bfs",
+                        "id": bfs_strategy_id,
                         "type": "radio",
                         "name": "strategy",
                         "checked": state.strategy == bfs_strategy_id,
                         "onchange": action(ChangeStrategy(bfs_strategy_id))
                     }, []),
 
-                    Html.label({"for": "bfs"}, [
+                    Html.label({"for": bfs_strategy_id}, [
                         Html.text("BFS")
                     ])
                 ]),
 
                 Html.div({}, [
                     Html.input({
-                        "id": "dfs",
+                        "id": dfs_strategy_id,
                         "type": "radio",
                         "name": "strategy",
                         "checked": state.strategy == dfs_strategy_id,
                         "onchange": action(ChangeStrategy(dfs_strategy_id))
                     }, []),
 
-                    Html.label({"for": "dfs"}, [
+                    Html.label({"for": dfs_strategy_id}, [
                         Html.text("DFS")
                     ])
                 ]),
@@ -627,28 +645,28 @@ def view(state: State):
 
                 Html.div({}, [
                     Html.input({
-                        "id": "bfs-maze",
+                        "id": bfs_maze_id,
                         "type": "radio",
                         "name": "maze",
                         "checked": state.maze_id == bfs_maze_id,
                         "onchange": action(ChangeMaze(bfs_maze_id))
                     }, []),
 
-                    Html.label({"for": "bfs-maze"}, [
+                    Html.label({"for": bfs_maze_id}, [
                         Html.text("Small Maze")
                     ])
                 ]),
 
                 Html.div({}, [
                     Html.input({
-                        "id": "dfs-maze",
+                        "id": dfs_maze_id,
                         "type": "radio",
                         "name": "maze",
                         "checked": state.maze_id == dfs_maze_id,
                         "onchange": action(ChangeMaze(dfs_maze_id))
                     }, []),
 
-                    Html.label({"for": "dfs-maze"}, [
+                    Html.label({"for": dfs_maze_id}, [
                         Html.text("Large Maze")
                     ])
                 ]),
