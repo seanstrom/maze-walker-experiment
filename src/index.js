@@ -1,8 +1,9 @@
 import { main } from './main.py'
-import dfsLayout from './mazes/dfs-0.json'
-import bfsLayout from './mazes/bfs-0.json'
+import smallMaze from './mazes/small.json'
+import largeMaze from './mazes/large.json'
+import trickyMaze from './mazes/tricky.json'
 import './index.scss'
 
 
-window.mazes = { "bfs-maze": bfsLayout, "dfs-maze": dfsLayout }
+window.mazes = { small: smallMaze, large: largeMaze, tricky: trickyMaze }
 main()

@@ -1,0 +1,270 @@
+{
+  "rows": [
+    [
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "finish"
+      }
+    ],
+    [
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      }
+    ],
+    [
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      }
+    ],
+    [
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      }
+    ],
+    [
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      }
+    ],
+    [
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      }
+    ],
+    [
+      {
+        "kind": "start"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "wall"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      },
+      {
+        "kind": "open"
+      }
+    ]
+  ]
+}

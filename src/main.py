@@ -65,8 +65,8 @@ class SearchStack(SearchQueue):
 class SearchGreedy():
     """
     The SearchGreedy is responsible for:
-        * storing, accessing, and sorting SearchNodes in a sorted structure based on:
-            * estimated distance from a SearchNode towards the goal (heuristic)
+        * storing and accessing SearchNodes in a sorted structure
+        * sorting SearchNodes based on the estimated distance to the goal (heuristic)
 
     SearchGreedy is used during a Greed-Best-First-Search (GBFS) strategy
     """
@@ -104,9 +104,8 @@ class SearchGreedy():
 class SearchStar(SearchGreedy):
     """
     The SearchStar is responsible for:
-        * storing, accessing, and sorting SearchNodes in a sorted structure based on:
-            * estimated distance from a SearchNode towards the goal (heuristic)
-            * and the steps taken from origin to the SearchNode (cost)
+        * storing and accessing SearchNodes in a sorted structure
+        * sorting SearchNodes based on the estimated distance to the goal (heuristic) and steps from maze entrance (cost)
 
     SearchStar is used during an A-Star Search (A*) strategy
     """
@@ -143,10 +142,12 @@ class State:
     The State class is responsible for storing:
         * a graph of the nodes and edges based on a maze layout
         * the status of the maze path searching ("searching", "found", "missing")
-        * an instance of a SearchStack or SearchQueue
-        * the positions of the start and finish spaces in the maze
-        * the layout of the maze in rows and cells
+        * the ID of the maze layout that is being visualized
+        * an instance of a SearchStack, SearchQueue, SearchGreedy, or SearchStar
+        * a boolean that represents if the visualizer is automatically walking the maze (playing)
         * a dict of all the spaces involved in the successful path
+        * the layout of the maze in rows and cells
+        * the markers or positions of the start and finish spaces in the maze
         * a dict of all the spaces that have been visited during the search
         * the current search node for the next step searching through the maze
     """
@@ -166,8 +167,8 @@ class State:
 @dataclass
 class NextStep:
     """
-    This is a placeholder class for creating a named action.
-    It will be used later on in the "update" section of the code.
+    A tagged or labeled data structure for a NextStep message.
+    It will be used later on to walk through the maze and update the visualizer.
     """
     pass
 
@@ -178,7 +179,7 @@ class Play:
     A tagged or labeled data structure for a Play message.
     Used for the GUI events for clicks and playing visualizer.
     """
-    speed: int = 1000
+    speed: int = 500
 
 
 @dataclass
@@ -220,8 +221,9 @@ class ChangeStrategy:
 # Helpers
 
 
-bfs_maze_id = "bfs-maze"
-dfs_maze_id = "dfs-maze"
+small_maze_id = "small"
+large_maze_id = "large"
+tricky_maze_id = "tricky"
 bfs_strategy_id = "bfs-strategy"
 dfs_strategy_id = "dfs-strategy"
 greedy_strategy_id = "greedy-strategy"
@@ -265,8 +267,9 @@ def find_markers(maze_layout):
     """
     Searches the maze layout (rows and cells) for the starting and finishing positions.
 
-    These are used later for:
+    These markers are used later for:
         * converting the maze into a graph
+        * measuring the estimated distance from a position to the goal
         * determining when the search is successful by reaching the goal
     """
     start_marker = (None, None)
@@ -285,7 +288,7 @@ def find_markers(maze_layout):
 
 def is_open_space(cell):
     """
-    Checks if a maze cell is a valid open space (or not a wall).
+    Checks if a maze cell is a valid space (not a wall).
     """
     kind = cell["kind"]
     statuses = ["open", "start", "finish"]
@@ -295,7 +298,7 @@ def is_open_space(cell):
 def detect_neighbors(rows, node_pos):
     """
     * Used to detect neighboring ("up", "down", "left", "right") spaces of a maze cell
-    * Returns a list of tuples with a neighbor's direction and maze position
+    * Returns a list of tuples with a neighbor's maze position and direction
     """
     neighbors = []
     (x, y) = node_pos
@@ -327,7 +330,7 @@ def build_graph_helper(graph, layout, node_pos):
         * recursively walking a maze of cells by their neighbor cells
         * building a graph of nodes and edges between neighboring cells
         * storing context about the position of the node in the maze
-        * storing context about the direction of the edges between the cells
+        * storing context about the direction of the edges between the nodes
     """
     node_id = make_id(*node_pos)
     neighbors = detect_neighbors(layout, node_pos)
@@ -402,8 +405,8 @@ def init(maze_id, strategy_id):
 def next_step(state: State) -> State:
     """
     Responsible for:
-        * collecting the neighbors of the current maze cell (SearchNode)
-        * adding unvisited maze cells to the search strategy
+        * collecting the neighbors of the current maze cell or SearchNode
+        * adding unvisited maze cells into the search state
         * marking traversed maze cells as visited
         * determining if the search solution:
             * has succeeded and is "found"
@@ -471,7 +474,10 @@ def next_step(state: State) -> State:
     return next_state
 
 
-def play(state, msg: Play):
+def play(state, msg: Play) -> State:
+    """
+    Activates the automatic walking of the maze cells (play mode)
+    """
     def play_action(current_state):
         if current_state.playing:
             return action(Play())(current_state)
@@ -489,11 +495,14 @@ def play(state, msg: Play):
 
     next_state = match_state(state)
     next_state.playing = True
-    return [next_state, task]
+    return (next_state, task)
 
 
 
 def pause(prev_state):
+    """
+    Pauses the automatic walking of the maze cells (play mode)
+    """
     def pause_action(state):
         next_state = State(**asdict(state))
         next_state.playing = False
@@ -503,14 +512,23 @@ def pause(prev_state):
 
 
 def reset(state: State) -> State:
+    """
+    Resets the visualizer and search state
+    """
     return init(state.maze_id, state.strategy)()
 
 
 def change_maze(state: State, msg: ChangeMaze) -> State:
+    """
+    Resets the visualizer and changes the maze layout
+    """
     return init(msg.maze_id, state.strategy)()
 
 
 def change_strategy(state: State, msg: ChangeStrategy) -> State:
+    """
+    Resets the visualizer and changes the search strategy
+    """
     return init(state.maze_id, msg.strategy_id)()
 
 
@@ -594,7 +612,7 @@ def view(state: State):
             ]),
             Html.div({"class": "controls"}, [
                 Html.button({
-                    "onclick": action(Pause()) if state.playing else action(Play(250))
+                    "onclick": action(Pause()) if state.playing else action(Play())
                 }, [
                     Html.text("Pause" if state.playing else "Play")
                 ]),
@@ -609,89 +627,107 @@ def view(state: State):
                     Html.text("Reset")
                 ]),
 
-                Html.div({}, [
-                    Html.input({
-                        "id": bfs_strategy_id,
-                        "type": "radio",
-                        "name": "strategy",
-                        "checked": state.strategy == bfs_strategy_id,
-                        "onchange": action(ChangeStrategy(bfs_strategy_id))
-                    }, []),
+                Html.div({"class": "input-group"}, [
+                    Html.div({}, [
+                        Html.input({
+                            "id": bfs_strategy_id,
+                            "type": "radio",
+                            "name": "strategy",
+                            "checked": state.strategy == bfs_strategy_id,
+                            "onchange": action(ChangeStrategy(bfs_strategy_id))
+                        }, []),
 
-                    Html.label({"for": bfs_strategy_id}, [
-                        Html.text("BFS")
-                    ])
+                        Html.label({"for": bfs_strategy_id}, [
+                            Html.text("BFS")
+                        ])
+                    ]),
+
+                    Html.div({}, [
+                        Html.input({
+                            "id": dfs_strategy_id,
+                            "type": "radio",
+                            "name": "strategy",
+                            "checked": state.strategy == dfs_strategy_id,
+                            "onchange": action(ChangeStrategy(dfs_strategy_id))
+                        }, []),
+
+                        Html.label({"for": dfs_strategy_id}, [
+                            Html.text("DFS")
+                        ])
+                    ]),
+
+                    Html.div({}, [
+                        Html.input({
+                            "id": greedy_strategy_id,
+                            "type": "radio",
+                            "name": "strategy",
+                            "checked": state.strategy == greedy_strategy_id,
+                            "onchange": action(ChangeStrategy(greedy_strategy_id))
+                        }, []),
+
+                        Html.label({"for": greedy_strategy_id}, [
+                            Html.text("GBFS")
+                        ])
+                    ]),
+
+                    Html.div({}, [
+                        Html.input({
+                            "id": astar_strategy_id,
+                            "type": "radio",
+                            "name": "strategy",
+                            "checked": state.strategy == astar_strategy_id,
+                            "onchange": action(ChangeStrategy(astar_strategy_id))
+                        }, []),
+
+                        Html.label({"for": astar_strategy_id}, [
+                            Html.text("A-Star")
+                        ])
+                    ]),
                 ]),
 
-                Html.div({}, [
-                    Html.input({
-                        "id": dfs_strategy_id,
-                        "type": "radio",
-                        "name": "strategy",
-                        "checked": state.strategy == dfs_strategy_id,
-                        "onchange": action(ChangeStrategy(dfs_strategy_id))
-                    }, []),
+                Html.div({"class": "input-group"}, [
+                    Html.div({}, [
+                        Html.input({
+                            "id": small_maze_id,
+                            "type": "radio",
+                            "name": "maze",
+                            "checked": state.maze_id == small_maze_id,
+                            "onchange": action(ChangeMaze(small_maze_id))
+                        }, []),
 
-                    Html.label({"for": dfs_strategy_id}, [
-                        Html.text("DFS")
-                    ])
-                ]),
+                        Html.label({"for": small_maze_id}, [
+                            Html.text("Small Maze")
+                        ])
+                    ]),
 
-                Html.div({}, [
-                    Html.input({
-                        "id": greedy_strategy_id,
-                        "type": "radio",
-                        "name": "strategy",
-                        "checked": state.strategy == greedy_strategy_id,
-                        "onchange": action(ChangeStrategy(greedy_strategy_id))
-                    }, []),
+                    Html.div({}, [
+                        Html.input({
+                            "id": large_maze_id,
+                            "type": "radio",
+                            "name": "maze",
+                            "checked": state.maze_id == large_maze_id,
+                            "onchange": action(ChangeMaze(large_maze_id))
+                        }, []),
 
-                    Html.label({"for": greedy_strategy_id}, [
-                        Html.text("GBFS")
-                    ])
-                ]),
+                        Html.label({"for": large_maze_id}, [
+                            Html.text("Large Maze")
+                        ])
+                    ]),
 
-                Html.div({}, [
-                    Html.input({
-                        "id": astar_strategy_id,
-                        "type": "radio",
-                        "name": "strategy",
-                        "checked": state.strategy == astar_strategy_id,
-                        "onchange": action(ChangeStrategy(astar_strategy_id))
-                    }, []),
+                    Html.div({}, [
+                        Html.input({
+                            "id": tricky_maze_id,
+                            "type": "radio",
+                            "name": "maze",
+                            "checked": state.maze_id == tricky_maze_id,
+                            "onchange": action(ChangeMaze(tricky_maze_id))
+                        }, []),
 
-                    Html.label({"for": astar_strategy_id}, [
-                        Html.text("A-Star")
-                    ])
-                ]),
-
-                Html.div({}, [
-                    Html.input({
-                        "id": bfs_maze_id,
-                        "type": "radio",
-                        "name": "maze",
-                        "checked": state.maze_id == bfs_maze_id,
-                        "onchange": action(ChangeMaze(bfs_maze_id))
-                    }, []),
-
-                    Html.label({"for": bfs_maze_id}, [
-                        Html.text("Small Maze")
-                    ])
-                ]),
-
-                Html.div({}, [
-                    Html.input({
-                        "id": dfs_maze_id,
-                        "type": "radio",
-                        "name": "maze",
-                        "checked": state.maze_id == dfs_maze_id,
-                        "onchange": action(ChangeMaze(dfs_maze_id))
-                    }, []),
-
-                    Html.label({"for": dfs_maze_id}, [
-                        Html.text("Large Maze")
-                    ])
-                ]),
+                        Html.label({"for": tricky_maze_id}, [
+                            Html.text("Tricky Maze")
+                        ])
+                    ]),
+                ])
             ])
         ])
     ])
@@ -701,9 +737,9 @@ def view(state: State):
 
 def main():
     """
-    * Initializes the search of the maze
-    * Visualizes a maze of cells
+    * Initializes the search of a maze layout with a search strategy
+    * Visualize the maze of cells as HTML elements
     """
     element = document.getElementById("root")
-    Hyper.app(node=element, view=view, init=init(dfs_maze_id, bfs_strategy_id))
+    Hyper.app(node=element, view=view, init=init(large_maze_id, bfs_strategy_id))
 
