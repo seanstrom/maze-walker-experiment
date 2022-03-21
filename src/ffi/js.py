@@ -46,6 +46,16 @@ Json = window.JSON
 Maze = require('maze-generation')
 
 
+# Heap
+
+HeapJS = require('heap-js')
+
+# __pragma__("kwargs")
+def Heap(*args, **kwargs):
+    return __new__(HeapJS.Heap(*args, **kwargs))
+# __pragma__("nokwargs")
+
+
 # Polyfill asdict for dataclasses
 
 def asdict(data):
