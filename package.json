@@ -22,6 +22,7 @@
     "@hyperapp/html": "^2.0.0",
     "global": "^4.4.0",
     "graphology": "^0.24.1",
+    "heap-js": "^2.1.6",
     "hyperapp": "^2.0.21",
     "maze-generation": "^3.0.1"
   }
