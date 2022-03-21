@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
-from ffi.js import Graph, Html, Hyper, document, window, asdict
+from ffi.js import Graph, Heap, Html, Hyper, asdict, document, window
 
 
 # Data Structures
@@ -38,7 +38,6 @@ class SearchQueue():
     """
     def __init__(self):
         self.search = []
-        self.count = -1
 
     def empty(self):
         return len(self.search) == 0
@@ -63,7 +62,7 @@ class SearchStack(SearchQueue):
             return self.search.pop()
 
 
-class SearchGreedy(SearchQueue):
+class SearchGreedy():
     """
     The SearchGreedy is responsible for:
         * storing, accessing, and sorting SearchNodes in a sorted structure based on:
@@ -72,8 +71,11 @@ class SearchGreedy(SearchQueue):
     SearchGreedy is used during a Greed-Best-First-Search (GBFS) strategy
     """
     def __init__(self, target_pos):
-        super().__init__()
+        self.search = Heap(self.compare)
         self.target_pos = target_pos
+
+    def empty(self):
+        return self.search.length == 0
 
     def distance(self, node):
         (node_x, node_y) = node.position
@@ -93,9 +95,10 @@ class SearchGreedy(SearchQueue):
             return 0
 
     def add(self, node):
-        self.search.append(node)
-        # use the "javascript sort" function to sort the array
-        self.search.js_sort(self.compare)
+        self.search.push(node)
+
+    def remove(self):
+        return self.search.js_pop(self.search)
 
 
 class SearchStar(SearchGreedy):
@@ -172,31 +175,45 @@ class NextStep:
 @dataclass
 class Play:
     """
-    Wip
+    A tagged or labeled data structure for a Play message.
+    Used for the GUI events for clicks and playing visualizer.
     """
-    pass
+    speed: int = 1000
 
 
 @dataclass
 class Pause:
     """
-    Wip
+    A tagged or labeled data structure for a Pause message.
+    Used for the GUI events for clicks and pausing the visualizer.
     """
     pass
 
 
 @dataclass
 class Reset:
+    """
+    A tagged or labeled data structure for a Reset message.
+    Used for the GUI events for clicks and resetting the visualizer.
+    """
     pass
 
 
 @dataclass
 class ChangeMaze:
+    """
+    A tagged or labeled data structure for a ChangeMaze message.
+    Used for the GUI events for clicks and changing the maze layout.
+    """
     maze_id: str = None
 
 
 @dataclass
 class ChangeStrategy:
+    """
+    A tagged or labeled data structure for a ChangeStrategy message.
+    Used for the GUI events for clicks and changing the search strategy.
+    """
     strategy_id: str = None
 
 
@@ -454,7 +471,7 @@ def next_step(state: State) -> State:
     return next_state
 
 
-def play(state):
+def play(state, msg: Play):
     def play_action(current_state):
         if current_state.playing:
             return action(Play())(current_state)
@@ -462,13 +479,18 @@ def play(state):
             return lambda: current_state
 
     def task(dispatch):
-        window.setTimeout(lambda: dispatch(play_action), 1000)
+        window.setTimeout(lambda: dispatch(play_action), msg.speed)
 
-    next_state = update(state, NextStep())
-    playing_state = State(**asdict(next_state))
-    playing_state.playing = True
+    def match_state(_state):
+        if _state.playing:
+            return update(_state, NextStep())
+        else:
+            return State(**asdict(_state))
 
-    return [playing_state, task]
+    next_state = match_state(state)
+    next_state.playing = True
+    return [next_state, task]
+
 
 
 def pause(prev_state):
@@ -500,7 +522,7 @@ def update(state, msg):
     if type(msg) is NextStep:
         return next_step(state)
     if type(msg) is Play:
-        return play(state)
+        return play(state, msg)
     if type(msg) is Pause:
         return pause(state)
     if type(msg) is Reset:
@@ -572,7 +594,7 @@ def view(state: State):
             ]),
             Html.div({"class": "controls"}, [
                 Html.button({
-                    "onclick": action(Pause()) if state.playing else action(Play())
+                    "onclick": action(Pause()) if state.playing else action(Play(250))
                 }, [
                     Html.text("Pause" if state.playing else "Play")
                 ]),
