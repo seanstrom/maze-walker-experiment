@@ -122,17 +122,13 @@ class Reset:
 
 
 @dataclass
-class UseBFS:
-    pass
-
-@dataclass
-class UseDFS:
-    pass
-
-
-@dataclass
 class ChangeMaze:
     maze_id: str = None
+
+
+@dataclass
+class ChangeStrategy:
+    strategy_id: str = None
 
 
 # Helpers
@@ -406,23 +402,16 @@ def pause(prev_state):
     return [prev_state, lambda dispatch: dispatch(pause_action)]
 
 
-def reset(state):
-    next_state = init(state.maze_id, state.strategy)()
-    return next_state
-
-
-def use_bfs_search(state: State) -> State:
-    next_state = init(state.maze_id, bfs_strategy_id)()
-    return next_state
-
-
-def use_dfs_search(state: State) -> State:
-    next_state = init(state.maze_id, dfs_strategy_id)()
-    return next_state
+def reset(state: State) -> State:
+    return init(state.maze_id, state.strategy)()
 
 
 def change_maze(state: State, msg: ChangeMaze) -> State:
     return init(msg.maze_id, state.strategy)()
+
+
+def change_strategy(state: State, msg: ChangeStrategy) -> State:
+    return init(state.maze_id, msg.strategy_id)()
 
 
 def update(state, msg):
@@ -438,12 +427,10 @@ def update(state, msg):
         return pause(state)
     if type(msg) is Reset:
         return reset(state)
-    if type(msg) is UseBFS:
-        return use_bfs_search(state)
-    if type(msg) is UseDFS:
-        return use_dfs_search(state)
     if type(msg) is ChangeMaze:
         return change_maze(state, msg)
+    if type(msg) is ChangeStrategy:
+        return change_strategy(state, msg)
 
     return state
 
@@ -527,7 +514,7 @@ def view(state: State):
                         "type": "radio",
                         "name": "strategy",
                         "checked": state.strategy == bfs_strategy_id,
-                        "onchange": action(UseBFS())
+                        "onchange": action(ChangeStrategy(bfs_strategy_id))
                     }, []),
 
                     Html.label({"for": "bfs"}, [
@@ -541,7 +528,7 @@ def view(state: State):
                         "type": "radio",
                         "name": "strategy",
                         "checked": state.strategy == dfs_strategy_id,
-                        "onchange": action(UseDFS())
+                        "onchange": action(ChangeStrategy(dfs_strategy_id))
                     }, []),
 
                     Html.label({"for": "dfs"}, [
