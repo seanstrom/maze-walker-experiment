@@ -1,0 +1,99 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #eeeeee;
+  font-family: "Helvetica Neue", sans-serif;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  padding: 30px 30px 30px;
+  justify-content: center;
+  align-items: center;
+}
+
+.layout {
+  flex: 1 1 auto;
+  max-width: 768px;
+  max-height: 545px;
+  width: 100%;
+  height: 100%;
+}
+
+.container, .maze, .frame, .layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.frame {
+  padding: 20px;
+  flex: 1 1 auto;
+  background: black;
+  border-radius: 30px;
+  margin-bottom: 30px;
+}
+
+.maze {
+  flex: 1 1 auto;
+  overflow: hidden;
+  background: black;
+  border-radius: 10px;
+  border: 3px solid black;
+}
+
+.row, .cell {
+  display: flex;
+  flex: 1 1 auto;
+}
+
+.controls {
+  display: flex;
+  padding: 0 20px;
+  justify-content: center;
+}
+.controls button {
+  padding: 10px 20px;
+  align-self: flex-start;
+}
+.controls .input-group, .controls button {
+  margin-right: 10px;
+}
+
+.cell {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid black;
+}
+.cell p {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+}
+.cell.start {
+  background: #ddffdd;
+}
+.cell.finish {
+  background: #ffaaaa;
+}
+.cell.open {
+  background: #BBBBBB;
+}
+.cell.open.current {
+  background: #FFFFFF;
+}
+.cell.open.visited.path {
+  background: #a984cc;
+}
+.cell.wall {
+  background: #003300;
+}
+.cell.visited.open {
+  background: #ffffaa;
+}
+/*# sourceMappingURL=index.ce1d6491.css.map */
