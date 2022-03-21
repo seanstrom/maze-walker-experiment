@@ -78,6 +78,9 @@ class SearchGreedy():
         return self.search.length == 0
 
     def distance(self, node):
+        """
+        Calculate the distance between a node and the goal based on XY coordinates
+        """
         (node_x, node_y) = node.position
         (target_x, target_y) = self.target_pos
         x_distance = abs(target_x - node_x)
@@ -85,6 +88,9 @@ class SearchGreedy():
         return x_distance + y_distance
 
     def compare(self, node_a, node_b):
+        """
+        Compare SearchNodes based on the estimated distance to the goal
+        """
         node_a_distance = self.distance(node_a)
         node_b_distance = self.distance(node_b)
         if node_a_distance < node_b_distance:
@@ -110,6 +116,9 @@ class SearchStar(SearchGreedy):
     SearchStar is used during an A-Star Search (A*) strategy
     """
     def cost(self, node):
+        """
+        Backtrack from a node to the beginning and count the steps
+        """
         count = 0
         while node.parent is not None:
             count += 1
@@ -117,6 +126,9 @@ class SearchStar(SearchGreedy):
         return count
 
     def compare(self, node_a, node_b):
+        """
+        Compare SearchNodes based on the estimated distance to the goal and the amount of steps from the start
+        """
         node_a_cost = self.cost(node_a)
         node_b_cost = self.cost(node_b)
         node_a_distance = self.distance(node_a)
@@ -333,16 +345,21 @@ def build_graph_helper(graph, layout, node_pos):
         * storing context about the direction of the edges between the nodes
     """
     node_id = make_id(*node_pos)
+
+    # Detect the neighboring cells of the maze
     neighbors = detect_neighbors(layout, node_pos)
 
+    # Add the current node to the graph structure with position info
     add_node(graph, node_id, dict(position=node_pos))
 
+    # Connect the current node to neighboring nodes with edges and direction info
     for (direction, neighbor_pos) in neighbors:
         neighbor_id = make_id(*neighbor_pos)
         if graph.hasNode(neighbor_id):
             add_edge(graph, node_id, neighbor_id, dict(direction=direction))
             add_edge(graph, neighbor_id, node_id, dict(direction=opposite_directions[direction]))
 
+    # Continue to walk through the maze and building the graph
     for (_, next_pos) in neighbors:
         next_id = make_id(*next_pos)
         if not graph.hasNode(next_id):
@@ -420,8 +437,11 @@ def next_step(state: State) -> State:
 
     (_, finish_pos) = state.markers
     target_id = make_id(*finish_pos)
+
+    # Find the neighboring spaces of the current maze cell
     neighbors = state.graph.neighbors(state.current_node.id)
 
+    # Add each neighboring maze cell to the search state
     for neighbor_id in neighbors:
         edge = state.graph.edge(state.current_node.id, neighbor_id)
         position = state.graph.getNodeAttribute(neighbor_id, 'position')
@@ -435,11 +455,14 @@ def next_step(state: State) -> State:
                     position=position,
                     direction=direction))
 
+    # Mark the current maze cell as "visited"
     if not state.visited[state.current_node.id]:
         state.visited[state.current_node.id] = True
 
+    # Retrieve the next maze cell from the search state,
     next_node = state.search.remove() if not state.search.empty() else state.current_node
 
+    # Create an updated search status if we found the goal or reached a final dead-end
     def match_node(node):
         if node.id == target_id:
             return "found"
@@ -450,6 +473,7 @@ def next_step(state: State) -> State:
 
     next_status = match_node(next_node)
 
+    # If the solution is found, mark each maze cell in the solution path as "path"
     def match_status(status):
         if status == "found":
             path = []
@@ -464,6 +488,7 @@ def next_step(state: State) -> State:
 
         return state.path
 
+    # Return an updated state value for the visualizer to render
     next_path = match_status(next_status)
     next_state = State(**asdict(state))
 
